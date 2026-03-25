@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="5K Trainer">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>5K Trainer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --card: #131a2e;
+      --card-alt: #1a2340;
+      --accent: #00e676;
+      --accent-orange: #ff6d00;
+      --accent-blue: #448aff;
+      --text: #ffffff;
+      --text-dim: #7a8bb5;
+      --border: #1e2a4a;
+      --danger: #ff1744;
+      --success: #00e676;
+      --easy: #00e676;
+      --medium: #ffab00;
+      --hard: #ff1744;
+      --rest: #7a8bb5;
+      --intervals: #448aff;
+      --tempo: #ff6d00;
+      --long: #e040fb;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+
+    /* --- UTILITIES --- */
+    .hidden { display: none !important; }
+    .mono { font-family: 'Space Mono', monospace; }
+
+    /* --- ANIMATIONS --- */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .animate-in { animation: fadeInUp 0.4s ease-out forwards; }
+    .animate-slide { animation: slideIn 0.3s ease-out forwards; }
+
+    /* --- LOGIN SCREEN --- */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .login-logo {
+      width: 80px; height: 80px; border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; font-size: 40px;
+      box-shadow: 0 8px 32px rgba(0,230,118,0.2);
+    }
+    .login-title { font-size: 32px; font-weight: 900; letter-spacing: -1px; text-align: center; }
+    .login-subtitle { color: var(--text-dim); font-size: 14px; text-align: center; margin: 8px 0 0; }
+    .login-card {
+      background: var(--card); border-radius: 20px; padding: 28px;
+      width: 100%; max-width: 340px; border: 1px solid var(--border); margin-top: 48px;
+    }
+    .form-label {
+      color: var(--text-dim); font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%; padding: 14px 16px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 16px; font-family: 'Outfit', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: #3a4a6a; }
+    .form-group { margin-bottom: 20px; }
+
+    .btn-primary {
+      width: 100%; padding: 16px; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      letter-spacing: 0.5px; transition: all 0.3s;
+      background: linear-gradient(135deg, var(--accent), #00c853);
+      color: var(--bg); box-shadow: 0 4px 20px rgba(0,230,118,0.25);
+    }
+    .btn-primary:disabled {
+      background: var(--border); color: var(--text-dim);
+      box-shadow: none; cursor: default;
+    }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+
+    .login-error { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 16px; }
+    .login-footer { color: var(--text-dim); font-size: 12px; margin-top: 32px; opacity: 0.6; text-align: center; }
+
+    /* --- ONBOARDING --- */
+    #onboarding-screen { min-height: 100vh; padding: 24px 20px; }
+    .progress-bar { display: flex; gap: 6px; margin-bottom: 32px; }
+    .progress-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+    .progress-dot.active { background: var(--accent); }
+    .onboard-title { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+    .onboard-subtitle { color: var(--text-dim); font-size: 14px; margin-bottom: 32px; }
+    .option-btn {
+      width: 100%; padding: 18px 20px; background: var(--card);
+      border: 2px solid var(--border); border-radius: 16px;
+      cursor: pointer; text-align: left; transition: all 0.2s; margin-bottom: 12px;
+    }
+    .option-btn.selected { background: rgba(0,230,118,0.06); border-color: var(--accent); }
+    .option-btn:active { transform: scale(0.98); }
+    .option-label { color: var(--text); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .option-desc { color: var(--text-dim); font-size: 13px; }
+    .onboard-nav { display: flex; gap: 12px; margin-top: 32px; }
+    .btn-secondary {
+      flex: 1; padding: 16px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary-flex { flex: 2; }
+
+    /* --- MAIN APP --- */
+    #main-app { padding-bottom: 80px; }
+    .app-header {
+      padding: 16px 20px; display: flex; justify-content: space-between;
+      align-items: center; border-bottom: 1px solid var(--border);
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: var(--bg);
+    }
+    .welcome-label { color: var(--text-dim); font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+    .welcome-name { color: var(--text); font-size: 16px; font-weight: 700; }
+    .btn-logout {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-dim); padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; cursor: pointer; font-family: 'Outfit', sans-serif;
+    }
+
+    /* --- TAB CONTENT --- */
+    .tab-content { padding: 20px 20px 0; }
+
+    /* --- BOTTOM NAV --- */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px; background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 max(12px, env(safe-area-inset-bottom)); z-index: 100;
+    }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 4px 8px; color: var(--text-dim); transition: color 0.2s;
+      font-family: 'Outfit', sans-serif;
+    }
+    .nav-btn.active { color: var(--accent); }
+    .nav-icon { font-size: 18px; }
+    .nav-icon.log-icon { font-size: 22px; }
+    .nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.5px; }
+    .nav-btn.active .nav-label { font-weight: 700; }
+
+    /* --- TODAY SCREEN --- */
+    .date-header { margin-bottom: 24px; }
+    .date-text { color: var(--text-dim); font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .week-badge { color: var(--accent); font-size: 14px; font-weight: 600; margin-top: 4px; }
+
+    .session-card {
+      background: linear-gradient(135deg, var(--card), var(--card-alt));
+      border-radius: 20px; padding: 24px; margin-bottom: 20px;
+      border: 1px solid var(--border); position: relative; overflow: hidden;
+    }
+    .session-card .glow {
+      position: absolute; top: -20px; right: -20px;
+      width: 100px; height: 100px; border-radius: 50%; opacity: 0.15;
+    }
+    .session-type-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .session-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.3; }
+    .session-desc { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+    .session-stats { display: flex; gap: 16px; }
+    .stat-box {
+      background: var(--bg); border-radius: 12px; padding: 12px 16px;
+      flex: 1; text-align: center;
+    }
+    .stat-value { font-size: 24px; font-weight: 800; }
+    .stat-label { color: var(--text-dim); font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-top: 2px; }
+
+    .btn-log-run {
+      width: 100%; padding: 18px; border: none; border-radius: 16px;
+      font-size: 17px; font-weight: 800; cursor: pointer; margin-bottom: 20px;
+      letter-spacing: 0.5px; display: flex; align-items: center;
+      justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, var(--accent), #00c853);
+      color: var(--bg); box-shadow: 0 4px 24px rgba(0,230,118,0.25);
+    }
+    .btn-log-run:active { transform: scale(0.98); }
+
+    .logged-banner {
+      background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 16px; padding: 16px; text-align: center; margin-bottom: 20px;
+    }
+    .logged-banner span { color: var(--success); font-size: 15px; font-weight: 700; }
+
+    .info-card {
+      background: var(--card); border-radius: 16px; padding: 20px;
+      border: 1px solid var(--border); margin-bottom: 20px;
+    }
+    .info-card-title {
+      font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+
+    .week-days { display: flex; gap: 6px; }
+    .week-day { flex: 1; text-align: center; }
+    .week-day-label { color: var(--text-dim); font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+    .week-day-icon {
+      width: 36px; height: 36px; border-radius: 10px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+      border: 1px solid var(--border);
+    }
+    .week-day-icon.today { border: 2px solid var(--accent); }
+
+    .progress-track { background: var(--bg); border-radius: 8px; height: 8px; overflow: hidden; margin-top: 16px; }
+    .progress-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent), var(--accent-blue)); transition: width 0.5s; }
+    .progress-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+    .progress-label-text { color: var(--text-dim); font-size: 12px; }
+
+    .run-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .run-date { font-size: 14px; font-weight: 600; }
+    .run-details { color: var(--text-dim); font-size: 12px; margin-top: 2px; }
+    .run-pace { font-size: 18px; font-weight: 800; color: var(--accent); }
+    .run-pace-unit { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+
+    /* --- PLAN SCREEN --- */
+    .week-accordion {
+      margin-bottom: 12px; border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .week-header {
+      width: 100%; padding: 16px 20px; background: var(--card);
+      border: none; cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center;
+      font-family: 'Outfit', sans-serif;
+    }
+    .week-header:active { background: var(--card-alt); }
+    .week-header-left { display: flex; align-items: center; gap: 12px; }
+    .week-number {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(0,230,118,0.12); display: flex;
+      align-items: center; justify-content: center;
+      color: var(--accent); font-weight: 800; font-size: 14px;
+    }
+    .week-title { color: var(--text); font-size: 15px; font-weight: 700; text-align: left; }
+    .week-subtitle { color: var(--text-dim); font-size: 12px; text-align: left; }
+    .week-arrow { color: var(--text-dim); font-size: 18px; }
+    .week-body { background: var(--card); padding: 8px 16px 16px; }
+    .plan-session-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .plan-session-row:last-child { border-bottom: none; }
+    .plan-day-label { width: 40px; text-align: center; color: var(--text-dim); font-size: 12px; font-weight: 600; }
+    .plan-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .plan-session-desc { flex: 1; font-size: 13px; }
+    .plan-session-dist { font-size: 13px; font-weight: 700; color: var(--accent); }
+
+    /* --- LOG RUN SCREEN --- */
+    .form-input.mono-input {
+      font-family: 'Space Mono', monospace; font-size: 18px;
+      font-weight: 600; text-align: center;
+    }
+    .time-row { display: flex; gap: 12px; align-items: center; }
+    .time-row .form-input { flex: 1; }
+    .time-sep { color: var(--text-dim); font-size: 16px; font-weight: 600; }
+    .effort-row { display: flex; gap: 8px; }
+    .effort-btn {
+      flex: 1; padding: 12px 8px; border-radius: 12px; cursor: pointer;
+      border: 2px solid var(--border); background: var(--bg);
+      color: var(--text-dim); font-size: 14px; font-weight: 700;
+      transition: all 0.2s; font-family: 'Outfit', sans-serif;
+    }
+    .effort-btn.selected-easy { border-color: var(--easy); background: rgba(0,230,118,0.06); color: var(--easy); }
+    .effort-btn.selected-medium { border-color: var(--medium); background: rgba(255,171,0,0.06); color: var(--medium); }
+    .effort-btn.selected-hard { border-color: var(--hard); background: rgba(255,23,68,0.06); color: var(--hard); }
+    .effort-btn:active { transform: scale(0.96); }
+
+    .pace-preview {
+      background: var(--bg); border-radius: 14px; padding: 16px;
+      text-align: center; margin-bottom: 20px;
+    }
+    .pace-label { color: var(--text-dim); font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-bottom: 4px; }
+    .pace-value { color: var(--accent); font-size: 36px; font-weight: 900; }
+    .pace-unit { color: var(--text-dim); font-size: 13px; }
+
+    /* --- PROGRESS SCREEN --- */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--card); border-radius: 16px; padding: 20px;
+      border: 1px solid var(--border); text-align: center;
+    }
+    .stat-card-label { color: var(--text-dim); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card-value { font-size: 28px; font-weight: 900; }
+    .stat-card-unit { color: var(--text-dim); font-size: 12px; }
+
+    .chart-note { color: var(--text-dim); font-size: 12px; margin-top: 12px; text-align: center; }
+
+    .effort-tag {
+      font-size: 10px; font-weight: 700; padding: 2px 6px;
+      border-radius: 4px; display: inline-block;
+    }
+
+    /* --- COMPARE SCREEN --- */
+    .compare-headers {
+      display: flex; justify-content: space-between;
+      margin-bottom: 16px; padding: 0 8px;
+    }
+    .compare-user { display: flex; align-items: center; gap: 8px; }
+    .compare-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: var(--bg);
+    }
+    .compare-avatar.me { background: linear-gradient(135deg, var(--accent), var(--accent-blue)); }
+    .compare-avatar.them { background: linear-gradient(135deg, var(--accent-orange), var(--danger)); }
+    .compare-name-me { color: var(--accent); font-size: 14px; font-weight: 700; }
+    .compare-name-them { color: var(--accent-orange); font-size: 14px; font-weight: 700; }
+
+    .compare-card {
+      background: var(--card); border-radius: 16px; padding: 20px;
+      border: 1px solid var(--border); margin-bottom: 12px;
+    }
+    .compare-label {
+      color: var(--text-dim); font-size: 11px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; text-align: center; margin-bottom: 12px;
+    }
+    .compare-values { display: flex; justify-content: space-between; align-items: center; }
+    .compare-val { text-align: center; flex: 1; }
+    .compare-num { font-size: 26px; font-weight: 900; }
+    .compare-vs { color: var(--text-dim); font-size: 16px; font-weight: 300; padding: 0 12px; }
+    .leading-badge { font-size: 11px; font-weight: 700; margin-top: 4px; }
+
+    .activity-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .activity-left { display: flex; align-items: center; gap: 10px; }
+    .activity-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: var(--bg);
+    }
+    .activity-name { font-size: 13px; font-weight: 600; }
+    .activity-detail { color: var(--text-dim); font-size: 11px; margin-top: 1px; }
+
+    /* --- LOADING --- */
+    .loading-screen {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+    }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-dim); font-size: 14px; }
+
+    /* --- SCROLLBAR --- */
+    ::-webkit-scrollbar { width: 0; }
+  </style>
+</head>
+<body>
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div id="login-screen">
+  <div class="animate-in">
+    <div class="login-logo">🏃</div>
+    <h1 class="login-title">5K TRAINER</h1>
+    <p class="login-subtitle">Your personal running companion</p>
+  </div>
+  <div class="login-card animate-in" style="animation-delay: 0.15s;">
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input id="login-username" class="form-input" placeholder="Enter your username" autocapitalize="none" autocomplete="username">
+    </div>
+    <div class="form-group" style="margin-bottom: 24px;">
+      <label class="form-label">Password</label>
+      <input id="login-password" type="password" class="form-input" placeholder="Enter your password" autocomplete="current-password">
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <button id="login-btn" class="btn-primary" onclick="handleLogin()">LET'S GO →</button>
+  </div>
+  <p class="login-footer">Private app — invitation only</p>
+</div>
+
+<!-- ==================== ONBOARDING SCREEN ==================== -->
+<div id="onboarding-screen" class="hidden">
+  <div class="progress-bar" id="onboard-progress"></div>
+  <h1 class="onboard-title" id="onboard-title"></h1>
+  <p class="onboard-subtitle" id="onboard-subtitle"></p>
+  <div id="onboard-options"></div>
+  <div class="onboard-nav" id="onboard-nav"></div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="main-app" class="hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <div class="user-avatar" id="header-avatar"></div>
+      <div>
+        <div class="welcome-label">Welcome back</div>
+        <div class="welcome-name" id="header-name"></div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="handleLogout()">Log out</button>
+  </div>
+
+  <div id="tab-content"></div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-tab="today" onclick="switchTab('today')">
+      <span class="nav-icon">🏠</span><span class="nav-label">Today</span>
+    </button>
+    <button class="nav-btn" data-tab="plan" onclick="switchTab('plan')">
+      <span class="nav-icon">📋</span><span class="nav-label">Plan</span>
+    </button>
+    <button class="nav-btn" data-tab="log" onclick="switchTab('log')">
+      <span class="nav-icon log-icon">➕</span><span class="nav-label">Log Run</span>
+    </button>
+    <button class="nav-btn" data-tab="progress" onclick="switchTab('progress')">
+      <span class="nav-icon">📊</span><span class="nav-label">Progress</span>
+    </button>
+    <button class="nav-btn" data-tab="compare" onclick="switchTab('compare')">
+      <span class="nav-icon">👥</span><span class="nav-label">Compare</span>
+    </button>
+  </div>
+</div>
+
+<!-- ==================== LOADING SCREEN ==================== -->
+<div id="loading-screen" class="loading-screen hidden">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading your data...</div>
+</div>
+
+<!-- ==================== FIREBASE SDK ==================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, query, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+  // === FIREBASE CONFIG ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyAkyAelJoooij39P6vHJmOX86-14q4-ReA",
+    authDomain: "k-trainer-9dc9b.firebaseapp.com",
+    projectId: "k-trainer-9dc9b",
+    storageBucket: "k-trainer-9dc9b.firebasestorage.app",
+    messagingSenderId: "1095967189962",
+    appId: "1:1095967189962:web:d3202f2d5c9970c324bd33"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // === APP STATE ===
+  const STATE = {
+    user: null,
+    profile: null,
+    plan: null,
+    runs: [],
+    otherUser: null,
+    otherProfile: null,
+    otherRuns: [],
+    currentTab: 'today',
+    onboardStep: 0,
+    onboardData: { level: null, goalTime: null, weeks: null, daysPerWeek: null },
+  };
+
+  const USERS_MAP = {
+    'melanie': { username: 'Melanie', email: 'melanie@5kapp.com' },
+    'richard': { username: 'Richard', email: 'richard@5kapp.com' },
+  };
+
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // === EXPOSE FUNCTIONS TO GLOBAL SCOPE ===
+  window.handleLogin = handleLogin;
+  window.handleLogout = handleLogout;
+  window.switchTab = switchTab;
+
+  // === AUTH STATE LISTENER ===
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      showScreen('loading');
+      STATE.user = user;
+      // Determine username from email
+      const emailPrefix = user.email.split('@')[0].toLowerCase();
+      STATE.user.username = USERS_MAP[emailPrefix]?.username || emailPrefix;
+
+      // Find the other user
+      for (const [key, val] of Object.entries(USERS_MAP)) {
+        if (key !== emailPrefix) {
+          STATE.otherUser = val;
+          break;
+        }
+      }
+
+      // Load profile
+      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      if (profileDoc.exists()) {
+        STATE.profile = profileDoc.data();
+        STATE.plan = generateTrainingPlan(STATE.profile);
+      }
+
+      // Load runs
+      await loadRuns();
+      await loadOtherRuns();
+
+      if (STATE.profile) {
+        showScreen('main');
+        renderMainApp();
+      } else {
+        showScreen('onboarding');
+        renderOnboarding();
+      }
+    } else {
+      STATE.user = null;
+      STATE.profile = null;
+      STATE.plan = null;
+      STATE.runs = [];
+      showScreen('login');
+    }
+  });
+
+  // === LOAD RUNS ===
+  async function loadRuns() {
+    try {
+      const runsRef = collection(db, 'users', STATE.user.uid, 'runs');
+      const q = query(runsRef, orderBy('date', 'desc'));
+      const snap = await getDocs(q);
+      STATE.runs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.log('No runs yet or error:', e);
+      STATE.runs = [];
+    }
+  }
+
+  async function loadOtherRuns() {
+    try {
+      // Find other user's UID from profiles
+      const profilesSnap = await getDocs(collection(db, 'profiles'));
+      let otherUid = null;
+      profilesSnap.forEach(d => {
+        if (d.id !== STATE.user.uid) {
+          otherUid = d.id;
+          STATE.otherProfile = d.data();
+        }
+      });
+      if (otherUid) {
+        const runsRef = collection(db, 'users', otherUid, 'runs');
+        const q = query(runsRef, orderBy('date', 'desc'));
+        const snap = await getDocs(q);
+        STATE.otherRuns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+    } catch (e) {
+      console.log('Could not load other runs:', e);
+      STATE.otherRuns = [];
+    }
+  }
+
+  // === LOGIN ===
+  async function handleLogin() {
+    const username = document.getElementById('login-username').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-btn');
+
+    if (!username || !password) {
+      errorEl.textContent = 'Please enter both username and password';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    const email = `${username}@5kapp.com`;
+    btn.textContent = 'Signing in...';
+    btn.disabled = true;
+    errorEl.classList.add('hidden');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      console.error('Login error:', e);
+      errorEl.textContent = 'Wrong username or password. Please try again.';
+      errorEl.classList.remove('hidden');
+      btn.textContent = "LET'S GO →";
+      btn.disabled = false;
+    }
+  }
+
+  // === LOGOUT ===
+  async function handleLogout() {
+    await signOut(auth);
+  }
+
+  // Password enter key
+  document.getElementById('login-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
+  });
+
+  // === SCREEN MANAGEMENT ===
+  function showScreen(name) {
+    document.getElementById('login-screen').classList.toggle('hidden', name !== 'login');
+    document.getElementById('onboarding-screen').classList.toggle('hidden', name !== 'onboarding');
+    document.getElementById('main-app').classList.toggle('hidden', name !== 'main');
+    document.getElementById('loading-screen').classList.toggle('hidden', name !== 'loading');
+  }
+
+  // === TAB SWITCHING ===
+  function switchTab(tab) {
+    STATE.currentTab = tab;
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    renderTabContent();
+  }
+
+  // === TRAINING PLAN GENERATOR ===
+  function generateTrainingPlan(profile) {
+    const { level, goalTime, weeks, daysPerWeek } = profile;
+    const goalPaceMin = goalTime / 5;
+    const plan = [];
+
+    for (let w = 1; w <= weeks; w++) {
+      const sessions = [];
+      const progress = w / weeks;
+      const easyPace = +(goalPaceMin + 2 - progress * 1).toFixed(1);
+      const tempoPace = +(goalPaceMin + 0.5 - progress * 0.3).toFixed(1);
+
+      const types = level === 'beginner'
+        ? ['easy', 'intervals', 'rest', 'easy', 'long', 'rest', 'rest']
+        : ['easy', 'intervals', 'tempo', 'easy', 'long', 'rest', 'rest'];
+
+      for (let d = 0; d < 7; d++) {
+        if (d >= daysPerWeek) {
+          sessions.push({ day: d + 1, type: 'rest', description: 'Rest day — recover and stretch', distance: 0, pace: null });
+          continue;
+        }
+        const type = types[d % types.length];
+        let description, distance, pace;
+
+        if (type === 'rest') {
+          description = 'Rest day — recover and stretch'; distance = 0; pace = null;
+        } else if (type === 'easy') {
+          distance = +(level === 'beginner' ? 2 + progress * 1.5 : 3 + progress * 2).toFixed(1);
+          pace = easyPace;
+          description = `Easy run — ${distance} km at ~${pace} min/km`;
+        } else if (type === 'intervals') {
+          distance = +(level === 'beginner' ? 2 + progress * 1 : 3 + progress * 1.5).toFixed(1);
+          pace = tempoPace;
+          description = `Intervals — ${Math.round(distance * 2)} × 400m fast, 200m jog recovery`;
+        } else if (type === 'tempo') {
+          distance = +(3 + progress * 2).toFixed(1);
+          pace = tempoPace;
+          description = `Tempo run — ${distance} km at ~${pace} min/km`;
+        } else if (type === 'long') {
+          distance = +(level === 'beginner' ? 3 + progress * 2.5 : 4 + progress * 3).toFixed(1);
+          pace = +(easyPace + 0.5).toFixed(1);
+          description = `Long run — ${distance} km at ~${pace} min/km`;
+        }
+        sessions.push({ day: d + 1, type, description, distance, pace });
+      }
+      plan.push({ week: w, sessions });
+    }
+    return plan;
+  }
+
+  // === RENDER MAIN APP ===
+  function renderMainApp() {
+    document.getElementById('header-avatar').textContent = STATE.user.username[0].toUpperCase();
+    document.getElementById('header-name').textContent = STATE.user.username;
+    renderTabContent();
+  }
+
+  function renderTabContent() {
+    const el = document.getElementById('tab-content');
+    switch (STATE.currentTab) {
+      case 'today': el.innerHTML = renderTodayScreen(); break;
+      case 'plan': el.innerHTML = renderPlanScreen(); break;
+      case 'log': el.innerHTML = renderLogScreen(); break;
+      case 'progress': el.innerHTML = renderProgressScreen(); break;
+      case 'compare': el.innerHTML = renderCompareScreen(); break;
+    }
+    attachTabListeners();
+  }
+
+  function attachTabListeners() {
+    if (STATE.currentTab === 'log') {
+      document.getElementById('log-date')?.addEventListener('change', updatePacePreview);
+      document.getElementById('log-distance')?.addEventListener('input', updatePacePreview);
+      document.getElementById('log-minutes')?.addEventListener('input', updatePacePreview);
+      document.getElementById('log-seconds')?.addEventListener('input', updatePacePreview);
+
+      document.querySelectorAll('.effort-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.effort-btn').forEach(b => b.className = 'effort-btn');
+          btn.classList.add('effort-btn', `selected-${btn.dataset.effort}`);
+          STATE._selectedEffort = btn.dataset.effort;
+        });
+      });
+
+      document.getElementById('save-run-btn')?.addEventListener('click', saveRun);
+    }
+
+    if (STATE.currentTab === 'plan') {
+      document.querySelectorAll('.week-header').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const body = btn.nextElementSibling;
+          const arrow = btn.querySelector('.week-arrow');
+          const isOpen = !body.classList.contains('hidden');
+          // Close all
+          document.querySelectorAll('.week-body').forEach(b => b.classList.add('hidden'));
+          document.querySelectorAll('.week-arrow').forEach(a => a.textContent = '▼');
+          if (!isOpen) {
+            body.classList.remove('hidden');
+            arrow.textContent = '▲';
+          }
+        });
+      });
+    }
+
+    if (STATE.currentTab === 'today') {
+      document.getElementById('btn-goto-log')?.addEventListener('click', () => switchTab('log'));
+    }
+  }
+
+  // === TODAY SCREEN ===
+  function renderTodayScreen() {
+    if (!STATE.plan) return '<div class="tab-content"><p style="color:var(--text-dim)">No plan set up yet.</p></div>';
+    const today = new Date();
+    const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+    const currentWeek = Math.min(Math.max(Math.floor(STATE.runs.length / 3) + 1, 1), STATE.plan.length);
+    const weekData = STATE.plan[currentWeek - 1];
+    const session = weekData.sessions[dayOfWeek];
+    const todayStr = today.toISOString().slice(0, 10);
+    const todayLogged = STATE.runs.some(r => r.date === todayStr);
+
+    const typeColors = { easy: 'var(--easy)', intervals: 'var(--intervals)', tempo: 'var(--tempo)', long: 'var(--long)', rest: 'var(--rest)' };
+    const typeIcons = { easy: '🏃', intervals: '⚡', tempo: '🔥', long: '🏔️', rest: '—' };
+    const color = typeColors[session.type] || 'var(--accent)';
+
+    const totalDistWeek = STATE.runs.filter(r => {
+      const d = new Date(r.date);
+      const ws = new Date(today); ws.setDate(today.getDate() - today.getDay());
+      return d >= ws;
+    }).reduce((s, r) => s + r.distance, 0);
+    const weekTarget = weekData.sessions.reduce((s, ses) => s + ses.distance, 0);
+
+    let weekDaysHtml = weekData.sessions.map((ses, i) => {
+      const c = typeColors[ses.type] || 'var(--text-dim)';
+      return `<div class="week-day">
+        <div class="week-day-label">${DAYS[i]}</div>
+        <div class="week-day-icon ${i === dayOfWeek ? 'today' : ''}" style="background:${ses.type === 'rest' ? 'var(--border)' : c + '22'}">
+          ${typeIcons[ses.type] || '🏃'}
+        </div>
+      </div>`;
+    }).join('');
+
+    let recentHtml = STATE.runs.slice(0, 3).map(r => `
+      <div class="run-row">
+        <div>
+          <div class="run-date">${formatDate(r.date)}</div>
+          <div class="run-details">${r.distance} km · ${r.timeMinutes} min</div>
+        </div>
+        <div style="text-align:right">
+          <div class="run-pace mono">${r.pace}</div>
+          <div class="run-pace-unit">min/km</div>
+        </div>
+      </div>
+    `).join('');
+
+    return `<div class="tab-content animate-slide">
+      <div class="date-header">
+        <div class="date-text">${today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        <div class="week-badge mono">WEEK ${currentWeek} OF ${STATE.plan.length}</div>
+      </div>
+
+      <div class="session-card">
+        <div class="glow" style="background:${color}"></div>
+        <div class="session-type-badge" style="background:${color}22;color:${color}">
+          ${session.type === 'rest' ? '🛏️ REST DAY' : '🏃 ' + session.type}
+        </div>
+        <h2 class="session-title">${session.type === 'rest' ? 'Recovery Day' : "Today's Session"}</h2>
+        <p class="session-desc">${session.description}</p>
+        ${session.type !== 'rest' ? `
+          <div class="session-stats">
+            <div class="stat-box">
+              <div class="stat-value mono" style="color:var(--accent)">${session.distance}</div>
+              <div class="stat-label">KM</div>
+            </div>
+            ${session.pace ? `<div class="stat-box">
+              <div class="stat-value mono" style="color:var(--accent-orange)">${session.pace}</div>
+              <div class="stat-label">MIN/KM</div>
+            </div>` : ''}
+          </div>
+        ` : ''}
+      </div>
+
+      ${session.type !== 'rest' && !todayLogged ? '<button class="btn-log-run" id="btn-goto-log">✏️ LOG TODAY\'S RUN</button>' : ''}
+      ${todayLogged ? '<div class="logged-banner"><span>✅ Today\'s run logged!</span></div>' : ''}
+
+      <div class="info-card">
+        <h3 class="info-card-title">This Week</h3>
+        <div class="week-days">${weekDaysHtml}</div>
+        <div class="progress-track"><div class="progress-fill" style="width:${Math.min((totalDistWeek / Math.max(weekTarget, 1)) * 100, 100)}%"></div></div>
+        <div class="progress-labels">
+          <span class="progress-label-text">${totalDistWeek.toFixed(1)} km done</span>
+          <span class="progress-label-text">${weekTarget.toFixed(1)} km target</span>
+        </div>
+      </div>
+
+      ${STATE.runs.length > 0 ? `<div class="info-card">
+        <h3 class="info-card-title">Recent Runs</h3>
+        ${recentHtml}
+      </div>` : ''}
+    </div>`;
+  }
+
+  // === PLAN SCREEN ===
+  function renderPlanScreen() {
+    if (!STATE.plan) return '<div class="tab-content"><p style="color:var(--text-dim)">No plan yet.</p></div>';
+    const typeColors = { easy: 'var(--easy)', intervals: 'var(--intervals)', tempo: 'var(--tempo)', long: 'var(--long)', rest: 'var(--rest)' };
+
+    let weeksHtml = STATE.plan.map((week, wi) => {
+      const totalDist = week.sessions.reduce((s, ses) => s + ses.distance, 0).toFixed(1);
+      const numSessions = week.sessions.filter(s => s.type !== 'rest').length;
+      let sessionsHtml = week.sessions.map((ses, si) => `
+        <div class="plan-session-row">
+          <div class="plan-day-label">${DAYS[si]}</div>
+          <div class="plan-dot" style="background:${typeColors[ses.type] || 'var(--text-dim)'}"></div>
+          <div class="plan-session-desc" style="color:${ses.type === 'rest' ? 'var(--text-dim)' : 'var(--text)'};font-weight:${ses.type === 'rest' ? 400 : 600}">
+            ${ses.type === 'rest' ? 'Rest' : ses.description}
+          </div>
+          ${ses.distance > 0 ? `<div class="plan-session-dist mono">${ses.distance}km</div>` : ''}
+        </div>
+      `).join('');
+
+      return `<div class="week-accordion">
+        <button class="week-header">
+          <div class="week-header-left">
+            <div class="week-number mono">${week.week}</div>
+            <div>
+              <div class="week-title">Week ${week.week}</div>
+              <div class="week-subtitle">${numSessions} sessions · ${totalDist} km</div>
+            </div>
+          </div>
+          <span class="week-arrow">${wi === 0 ? '▲' : '▼'}</span>
+        </button>
+        <div class="week-body ${wi === 0 ? '' : 'hidden'}">${sessionsHtml}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="tab-content animate-slide">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Training Plan</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin-bottom:20px">
+        ${STATE.profile.weeks} weeks · ${STATE.profile.daysPerWeek} days/week · Goal: under ${STATE.profile.goalTime} min
+      </p>
+      ${weeksHtml}
+    </div>`;
+  }
+
+  // === LOG RUN SCREEN ===
+  function renderLogScreen() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    STATE._selectedEffort = 'medium';
+
+    return `<div class="tab-content animate-slide">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Log a Run</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin-bottom:24px">Record your session details</p>
+
+      <div class="info-card" style="border-radius:20px;padding:24px">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input id="log-date" type="date" class="form-input mono-input" value="${todayStr}" style="color-scheme:dark">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Distance (km)</label>
+          <input id="log-distance" type="number" step="0.1" class="form-input mono-input" placeholder="0.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          <div class="time-row">
+            <input id="log-minutes" type="number" class="form-input mono-input" placeholder="00">
+            <span class="time-sep">min</span>
+            <input id="log-seconds" type="number" class="form-input mono-input" placeholder="00">
+            <span class="time-sep">sec</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:24px">
+          <label class="form-label">How did it feel?</label>
+          <div class="effort-row">
+            <button class="effort-btn" data-effort="easy">😊 Easy</button>
+            <button class="effort-btn selected-medium" data-effort="medium">😤 Medium</button>
+            <button class="effort-btn" data-effort="hard">🥵 Hard</button>
+          </div>
+        </div>
+        <div id="pace-preview" class="pace-preview hidden">
+          <div class="pace-label">YOUR PACE</div>
+          <div class="pace-value mono" id="pace-value">0.0</div>
+          <div class="pace-unit">min/km</div>
+        </div>
+        <button id="save-run-btn" class="btn-primary" disabled>SAVE RUN ✓</button>
+      </div>
+    </div>`;
+  }
+
+  function updatePacePreview() {
+    const dist = parseFloat(document.getElementById('log-distance')?.value);
+    const mins = parseInt(document.getElementById('log-minutes')?.value) || 0;
+    const secs = parseInt(document.getElementById('log-seconds')?.value) || 0;
+    const total = mins + secs / 60;
+    const preview = document.getElementById('pace-preview');
+    const btn = document.getElementById('save-run-btn');
+
+    if (dist > 0 && total > 0) {
+      const pace = (total / dist).toFixed(1);
+      document.getElementById('pace-value').textContent = pace;
+      preview.classList.remove('hidden');
+      btn.disabled = false;
+    } else {
+      preview.classList.add('hidden');
+      btn.disabled = true;
+    }
+  }
+
+  async function saveRun() {
+    const date = document.getElementById('log-date').value;
+    const distance = parseFloat(document.getElementById('log-distance').value);
+    const mins = parseInt(document.getElementById('log-minutes').value) || 0;
+    const secs = parseInt(document.getElementById('log-seconds').value) || 0;
+    const timeMinutes = +(mins + secs / 60).toFixed(1);
+    const pace = +(timeMinutes / distance).toFixed(1);
+    const effort = STATE._selectedEffort || 'medium';
+
+    const btn = document.getElementById('save-run-btn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    try {
+      const runsRef = collection(db, 'users', STATE.user.uid, 'runs');
+      await addDoc(runsRef, { date, distance, timeMinutes, pace, effort, createdAt: Timestamp.now() });
+      STATE.runs.unshift({ date, distance, timeMinutes, pace, effort, id: Date.now().toString() });
+      switchTab('today');
+    } catch (e) {
+      console.error('Error saving run:', e);
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  }
+
+  // === PROGRESS SCREEN ===
+  function renderProgressScreen() {
+    const totalDist = STATE.runs.reduce((s, r) => s + r.distance, 0);
+    const totalRuns = STATE.runs.length;
+    const avgPace = totalRuns ? (STATE.runs.reduce((s, r) => s + r.pace, 0) / totalRuns).toFixed(1) : '—';
+    const bestPace = totalRuns ? Math.min(...STATE.runs.map(r => r.pace)).toFixed(1) : '—';
+
+    const sorted = [...STATE.runs].sort((a, b) => a.date.localeCompare(b.date));
+
+    let chartHtml = '';
+    if (sorted.length > 1) {
+      const maxP = Math.max(...sorted.map(r => r.pace));
+      const minP = Math.min(...sorted.map(r => r.pace));
+      const w = sorted.length * 40;
+      const points = sorted.map((r, i) => `${i * 40 + 20},${130 - ((maxP - r.pace) / (maxP - minP + 0.5)) * 110}`).join(' ');
+      const dots = sorted.map((r, i) => {
+        const y = 130 - ((maxP - r.pace) / (maxP - minP + 0.5)) * 110;
+        return `<circle cx="${i * 40 + 20}" cy="${y}" r="5" fill="var(--accent)"/>
+          <text x="${i * 40 + 20}" y="${y - 12}" text-anchor="middle" fill="var(--text-dim)" font-size="10" font-family="'Space Mono',monospace">${r.pace}</text>`;
+      }).join('');
+
+      chartHtml = `<div class="info-card">
+        <h3 class="info-card-title">Pace Over Time</h3>
+        <div style="overflow-x:auto">
+          <svg width="${w}" height="140" style="overflow:visible">
+            <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${points}"/>
+            ${dots}
+          </svg>
+        </div>
+        <p class="chart-note">↓ Lower pace = faster you're running!</p>
+      </div>`;
+    }
+
+    const effortColors = { easy: 'var(--easy)', medium: 'var(--medium)', hard: 'var(--hard)' };
+    let allRunsHtml = STATE.runs.map(r => `
+      <div class="run-row">
+        <div>
+          <div class="run-date">${formatDate(r.date)}</div>
+          <div class="run-details" style="display:flex;gap:8px;align-items:center;margin-top:2px">
+            <span>${r.distance} km</span><span>·</span><span>${r.timeMinutes} min</span>
+            <span class="effort-tag" style="background:${effortColors[r.effort] || 'var(--medium)'}22;color:${effortColors[r.effort] || 'var(--medium)'}">${r.effort || ''}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <span class="run-pace mono">${r.pace}</span>
+          <span class="run-pace-unit"> min/km</span>
+        </div>
+      </div>
+    `).join('');
+
+    return `<div class="tab-content animate-slide">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Your Progress</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin-bottom:20px">Every run counts — keep going!</p>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card-label">Total Distance</div><div class="stat-card-value mono" style="color:var(--accent)">${totalDist.toFixed(1)}</div><div class="stat-card-unit">km</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Runs</div><div class="stat-card-value mono" style="color:var(--accent-blue)">${totalRuns}</div><div class="stat-card-unit">runs</div></div>
+        <div class="stat-card"><div class="stat-card-label">Avg Pace</div><div class="stat-card-value mono" style="color:var(--accent-orange)">${avgPace}</div><div class="stat-card-unit">min/km</div></div>
+        <div class="stat-card"><div class="stat-card-label">Best Pace</div><div class="stat-card-value mono" style="color:var(--success)">${bestPace}</div><div class="stat-card-unit">min/km</div></div>
+      </div>
+
+      ${chartHtml}
+
+      <div class="info-card">
+        <h3 class="info-card-title">All Runs</h3>
+        ${STATE.runs.length === 0 ? '<p style="color:var(--text-dim);font-size:14px">No runs logged yet. Get out there!</p>' : allRunsHtml}
+      </div>
+    </div>`;
+  }
+
+  // === COMPARE SCREEN ===
+  function renderCompareScreen() {
+    const other = STATE.otherUser || { username: 'Partner' };
+    const myStats = calcStats(STATE.runs);
+    const theirStats = calcStats(STATE.otherRuns);
+
+    const items = [
+      { label: 'Total Distance', mine: `${myStats.totalDist.toFixed(1)} km`, theirs: `${theirStats.totalDist.toFixed(1)} km`, myVal: myStats.totalDist, theirVal: theirStats.totalDist, higher: true },
+      { label: 'Total Runs', mine: myStats.totalRuns, theirs: theirStats.totalRuns, myVal: myStats.totalRuns, theirVal: theirStats.totalRuns, higher: true },
+      { label: 'Avg Pace', mine: myStats.avgPace, theirs: theirStats.avgPace, myVal: parseFloat(myStats.avgPace) || 99, theirVal: parseFloat(theirStats.avgPace) || 99, higher: false },
+      { label: 'Best Pace', mine: myStats.bestPace, theirs: theirStats.bestPace, myVal: parseFloat(myStats.bestPace) || 99, theirVal: parseFloat(theirStats.bestPace) || 99, higher: false },
+    ];
+
+    let cardsHtml = items.map(item => {
+      const iWin = item.higher ? item.myVal > item.theirVal : item.myVal < item.theirVal;
+      const theyWin = item.higher ? item.theirVal > item.myVal : item.theirVal < item.myVal;
+      return `<div class="compare-card">
+        <div class="compare-label">${item.label}</div>
+        <div class="compare-values">
+          <div class="compare-val">
+            <div class="compare-num mono" style="color:${iWin ? 'var(--accent)' : 'var(--text)'}">${item.mine}</div>
+            ${iWin ? '<div class="leading-badge" style="color:var(--accent)">🏆 LEADING</div>' : ''}
+          </div>
+          <div class="compare-vs">vs</div>
+          <div class="compare-val">
+            <div class="compare-num mono" style="color:${theyWin ? 'var(--accent-orange)' : 'var(--text)'}">${item.theirs}</div>
+            ${theyWin ? '<div class="leading-badge" style="color:var(--accent-orange)">🏆 LEADING</div>' : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Recent activity
+    const combined = [
+      ...STATE.runs.slice(0, 3).map(r => ({ ...r, who: 'you', initial: STATE.user.username[0] })),
+      ...STATE.otherRuns.slice(0, 3).map(r => ({ ...r, who: other.username, initial: other.username[0] })),
+    ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+
+    let activityHtml = combined.map(r => `
+      <div class="activity-row">
+        <div class="activity-left">
+          <div class="activity-avatar ${r.who === 'you' ? 'me' : 'them'}" style="background:linear-gradient(135deg, ${r.who === 'you' ? 'var(--accent),var(--accent-blue)' : 'var(--accent-orange),var(--danger)'})">
+            ${r.initial.toUpperCase()}
+          </div>
+          <div>
+            <div class="activity-name">${r.who === 'you' ? 'You' : r.who}</div>
+            <div class="activity-detail">${r.distance} km · ${formatDate(r.date)}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <span class="mono" style="font-size:15px;font-weight:800;color:${r.who === 'you' ? 'var(--accent)' : 'var(--accent-orange)'}">${r.pace}</span>
+          <span style="font-size:10px;color:var(--text-dim)"> min/km</span>
+        </div>
+      </div>
+    `).join('');
+
+    return `<div class="tab-content animate-slide">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Compare</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin-bottom:24px">Friendly competition keeps you motivated!</p>
+
+      <div class="compare-headers">
+        <div class="compare-user">
+          <div class="compare-avatar me">${STATE.user.username[0].toUpperCase()}</div>
+          <span class="compare-name-me">You</span>
+        </div>
+        <div class="compare-user">
+          <span class="compare-name-them">${other.username}</span>
+          <div class="compare-avatar them">${other.username[0].toUpperCase()}</div>
+        </div>
+      </div>
+
+      ${cardsHtml}
+
+      <div class="info-card" style="margin-top:8px">
+        <h3 class="info-card-title">Recent Activity</h3>
+        ${combined.length === 0 ? '<p style="color:var(--text-dim);font-size:14px">No runs logged yet by either of you!</p>' : activityHtml}
+      </div>
+    </div>`;
+  }
+
+  function calcStats(runs) {
+    return {
+      totalDist: runs.reduce((s, r) => s + r.distance, 0),
+      totalRuns: runs.length,
+      avgPace: runs.length ? (runs.reduce((s, r) => s + r.pace, 0) / runs.length).toFixed(1) : '—',
+      bestPace: runs.length ? Math.min(...runs.map(r => r.pace)).toFixed(1) : '—',
+    };
+  }
+
+  // === ONBOARDING ===
+  const ONBOARD_STEPS = [
+    {
+      title: "What's your running experience?",
+      subtitle: 'Be honest — the plan adapts to you!',
+      key: 'level',
+      options: [
+        { value: 'beginner', label: '🌱 Beginner', desc: 'New to running or getting back into it' },
+        { value: 'intermediate', label: '⚡ Intermediate', desc: 'Already running, want to get faster' },
+      ],
+    },
+    {
+      title: "What's your 5K goal time?",
+      subtitle: 'Pick the finish time you\'re aiming for',
+      key: 'goalTime',
+      options: [
+        { value: 35, label: 'Under 35 min', desc: 'Relaxed and steady' },
+        { value: 30, label: 'Under 30 min', desc: 'Solid recreational pace' },
+        { value: 25, label: 'Under 25 min', desc: 'Getting competitive!' },
+        { value: 22, label: 'Under 22 min', desc: 'Fast and focused' },
+      ],
+    },
+    {
+      title: 'How many weeks to train?',
+      subtitle: 'When\'s your race or target date?',
+      key: 'weeks',
+      options: [
+        { value: 6, label: '6 weeks', desc: 'Intense but doable' },
+        { value: 8, label: '8 weeks', desc: 'Recommended sweet spot' },
+        { value: 10, label: '10 weeks', desc: 'Plenty of time to build up' },
+        { value: 12, label: '12 weeks', desc: 'Gradual and thorough' },
+      ],
+    },
+    {
+      title: 'Days per week you can run?',
+      subtitle: 'Rest days are built in automatically',
+      key: 'daysPerWeek',
+      options: [
+        { value: 3, label: '3 days', desc: 'Great for beginners' },
+        { value: 4, label: '4 days', desc: 'Good balance' },
+        { value: 5, label: '5 days', desc: 'Serious training' },
+      ],
+    },
+  ];
+
+  function renderOnboarding() {
+    const step = ONBOARD_STEPS[STATE.onboardStep];
+    const progressHtml = ONBOARD_STEPS.map((_, i) =>
+      `<div class="progress-dot ${i <= STATE.onboardStep ? 'active' : ''}"></div>`
+    ).join('');
+
+    document.getElementById('onboard-progress').innerHTML = progressHtml;
+    document.getElementById('onboard-title').textContent = step.title;
+    document.getElementById('onboard-subtitle').textContent = step.subtitle;
+
+    const selected = STATE.onboardData[step.key];
+    document.getElementById('onboard-options').innerHTML = step.options.map(opt => `
+      <button class="option-btn ${selected === opt.value ? 'selected' : ''}" data-value="${opt.value}" onclick="window._selectOption('${step.key}', ${typeof opt.value === 'string' ? `'${opt.value}'` : opt.value})">
+        <div class="option-label">${opt.label}</div>
+        <div class="option-desc">${opt.desc}</div>
+      </button>
+    `).join('');
+
+    let navHtml = '';
+    if (STATE.onboardStep > 0) {
+      navHtml += `<button class="btn-secondary" onclick="window._onboardBack()">← Back</button>`;
+    }
+    const isLast = STATE.onboardStep >= ONBOARD_STEPS.length - 1;
+    navHtml += `<button class="btn-primary btn-primary-flex" ${!selected ? 'disabled' : ''} onclick="window._onboardNext()">
+      ${isLast ? 'BUILD MY PLAN →' : 'Next →'}
+    </button>`;
+    document.getElementById('onboard-nav').innerHTML = navHtml;
+  }
+
+  window._selectOption = function (key, value) {
+    STATE.onboardData[key] = value;
+    renderOnboarding();
+  };
+
+  window._onboardBack = function () {
+    STATE.onboardStep = Math.max(0, STATE.onboardStep - 1);
+    renderOnboarding();
+  };
+
+  window._onboardNext = async function () {
+    if (STATE.onboardStep < ONBOARD_STEPS.length - 1) {
+      STATE.onboardStep++;
+      renderOnboarding();
+    } else {
+      // Save profile to Firestore
+      const profile = { ...STATE.onboardData };
+      try {
+        await setDoc(doc(db, 'profiles', STATE.user.uid), profile);
+        STATE.profile = profile;
+        STATE.plan = generateTrainingPlan(profile);
+        showScreen('main');
+        renderMainApp();
+      } catch (e) {
+        console.error('Error saving profile:', e);
+        alert('Error saving your profile. Please try again.');
+      }
+    }
+  };
+
+  // === HELPERS ===
+  function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+</script>
+
+<!-- ==================== SERVICE WORKER REGISTRATION ==================== -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg failed:', err));
+  }
+</script>
+
+</body>
+</html>
